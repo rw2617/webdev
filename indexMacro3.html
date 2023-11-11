@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en-us">
+	<head>
+		<meta charset="utf-8">
+        <title>Gotta Catch 'em All!</title>
+        <style>
+            #left {
+                float: left;
+                width: 800px;
+                height: 600px;
+                position: relative;
+                margin-right: 20px;
+            }
+            #background {
+                position: absolute;
+                top: 0px;
+                left: 0px;
+                width: 100%;
+            }
+            #grass1 {
+                position: absolute;
+                left: 0px;
+                bottom: 0px;
+            }
+            #grass2 {
+                position: absolute;
+                left: 275px;
+                bottom: 0px;
+            }
+            #grass3 {
+                position: absolute;
+                right: 0px;
+                bottom: 0px;
+            }
+            .grass:hover {
+                background-color: rgba(255, 255, 0, 0.5);
+            }
+
+            table {
+            border-collapse: collapse;
+            width: 400px;
+            }
+
+            td, th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+            }
+
+            #space{
+                float: left;
+                width: 800px;
+                height: 620px;
+                position: relative;
+                margin-right: 20px;
+                z-index: -1;
+            }
+            .right{
+                float: right;
+            }
+            .left{
+                float: left;
+            }
+            </style>
+	</head>
+	<body>
+        <div id="left">
+            <img id="background" src="imagesMacro3/images/environment_forestbackground.png">
+            <img id="grass1" class="grass" src="imagesMacro3/images/grass.png">
+            <img id="grass2" class="grass" src="imagesMacro3/images/grass.png">
+            <img id="grass3" class="grass" src="imagesMacro3/images/grass.png">
+
+            <div id="space"></div>
+            <h2>Pokedex</h2>
+            <div id="pokedex">
+                <table>
+                    <tr>
+                        <th>Pokemon</th>
+                        <th>Count</th>
+                        <th>Distribution</th>
+                    </tr>
+                    <tr>
+                        <td>Pikachu</td>
+                        <td id="p_count">0</td>
+                        <td>
+                            <div id="p_bar">
+                                &nbsp;
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Bulbasaur</td>
+                        <td id="b_count">0</td>
+                        <td>
+                            <div id="b_bar">
+                                &nbsp;
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Charmander</td>
+                        <td id="c_count">0</td>
+                        <td>
+                            <div id="c_bar">
+                                &nbsp;
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Eevee</td>
+                        <td id="e_count">0</td>
+                        <td>
+                            <div id="e_bar">
+                                &nbsp;
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Squirtle</td>
+                        <td id="s_count">0</td>
+                        <td>
+                            <div id="s_bar">
+                                &nbsp;
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div id="right">
+            <h1>
+                Gotta Catch 'Em All!
+            </h1>
+            <h2 id="status">
+                click on a grass
+            </h2>
+            <div id="pokemon_caught">
+                Pokemon caught: 0
+            </div>
+            <div id="pokeball_number">
+                Pokeballs: 5
+            </div>
+            <div id="game_over"></div>
+            <button id="play_again_button" style="display: none;">
+                Play Again
+            </button>
+            <button id="start_over" style="display: none;">
+                Start Over
+            </button>
+            <h2>Reverse Chronological History</h2>
+            <div id="history" class="right"></div>
+        </div>
+        <script>
+            //set up dom queries for all things we plan on using
+            const grass1 = document.getElementById('grass1');
+            const grass2 = document.getElementById('grass2');
+            const grass3 = document.getElementById('grass3');
+            const pokemon_caught = document.getElementById('pokemon_caught');            const pokeballs_left_div = document.getElementById('pokeballs_left_div');
+            const pokeball_number = document.getElementById('pokeball_number');
+            const play_again_button = document.getElementById('play_again_button');
+            const game_over = document.getElementById('game_over');
+            const start_over = document.getElementById('start_over');
+            const history = document.getElementById('history');
+            
+            const p_count = document.getElementById('p_count');
+            const b_count = document.getElementById('b_count');
+            const c_count = document.getElementById('c_count');
+            const e_count = document.getElementById('e_count');
+            const s_count = document.getElementById('s_count');
+
+            const p_bar = document.getElementById('p_bar');
+            const b_bar = document.getElementById('b_bar');
+            const c_bar = document.getElementById('c_bar');
+            const e_bar = document.getElementById('e_bar');
+            const s_bar = document.getElementById('s_bar');
+
+            //array of pokemon
+            const pokemon = [
+                {name:'Pikachu', image:'imagesMacro3/images/pikachu.png'}, 
+                {name:'Bulbasaur', image:'imagesMacro3/images/bulbasaur.png'},
+                {name:'Charmander', image:'imagesMacro3/images/charmander.png'},
+                {name:'Eevee', image:'imagesMacro3/images/eevee.png'},
+                {name:'Squirtle', image:'imagesMacro3/images/squirtle.png'}
+            ]
+
+            //number of pokemon caught
+            let total_caught = 0;
+
+            //number of each pokemon caught
+            var pikachu = 0;
+            var bulbasaur = 0;
+            var charmander = 0;
+            var eevee = 0;
+            var squirtle = 0;
+
+            //variable for game state logic
+            let pokeballs_remaining = 5;
+            
+            //only allow to click once
+            var clicked = false;
+
+            var caught = '';
+
+            //grass1 user clicks
+            grass1.onclick = function(){
+                // make the play again button visible
+                play_again_button.style.display = 'block';
+
+                //one third chance
+                let chance = parseInt(Math.random() * 3);
+                
+                if (clicked == false){
+                    //reduce number of pokeballs
+                    pokeballs_remaining -= 1;
+
+                    //more pokeballs
+                    if (chance == 0){
+                        grass1.src = 'imagesMacro3/images/pokeballs.png';
+                        pokeballs_remaining += 2;
+                        caught = '2 pokeballs';
+                    }
+                    //nothing
+                    else if (chance == 1){
+                        grass1.src = '';
+                        caught = 'nothing';
+                    }
+                    //caught a pokemon
+                    else{
+                        let pokemon_chance = parseInt(Math.random() * 5);
+            
+                        //pikachu
+                        if (pokemon_chance == 0){
+                            grass1.src = pokemon[0].image;
+                            pikachu += 1;
+                            caught = 'pikachu';
+                        }
+                        //Bulbasaur
+                        else if (pokemon_chance == 1){
+                            grass1.src = pokemon[1].image;
+                            bulbasaur += 1;
+                            caught = 'bulbasaur';
+                        }
+                        //Charmander
+                        else if (pokemon_chance == 2){
+                            grass1.src = pokemon[2].image;
+                            charmander += 1;
+                            caught = 'charmander';
+                        }
+                        //Eevee
+                        else if (pokemon_chance == 3){
+                            grass1.src = pokemon[3].image;
+                            eevee += 1;
+                            caught = 'eevee';
+                        }
+                        //Squirtle
+                        else{
+                            grass1.src = pokemon[4].image;
+                            squirtle += 1;
+                            caught = 'squirtle';
+                        }
+                        total_caught += 1;                  
+                    }
+                }
+
+                clicked = true;
+
+                start_over.style.display = 'block';
+
+                //create new history item
+                if (caught){
+                    let item = document.createElement('p');
+                    let item_break = document.createElement('br');
+                    item.innerHTML = "you caught: " + caught + '!';
+                    item.classList.add('right');
+                    item_break.classList.add('right');
+                    history.insertBefore(item_break, history.firstChild);
+                    history.insertBefore(item, history.firstChild);
+                }
+                
+                caught = '';
+
+                //start over
+                start_over.onclick = function(){
+                    play_again_button.style.display = 'none';
+                    start_over.style.display = 'none';
+                    game_over.innerHTML = "";
+                    pokeballs_remaining = 5;
+                    total_caught = 0;
+                    pikachu = 0;
+                    bulbasaur = 0;
+                    charmander = 0;
+                    eevee = 0;
+                    squirtle = 0;
+
+                    clicked = false;
+                    
+                    grass1.src = "imagesMacro3/images/grass.png";
+                    grass2.src = "imagesMacro3/images/grass.png";
+                    grass3.src = "imagesMacro3/images/grass.png";
+                    
+                    pokeball_number.innerHTML = "Pokeballs: " + pokeballs_remaining;
+                    pokemon_caught.innerHTML = "Pokemon caught: " + total_caught;
+                    
+                    history.innerHTML = '';
+
+                    p_count.innerHTML = 0;
+                    b_count.innerHTML = 0;
+                    c_count.innerHTML = 0;
+                    e_count.innerHTML = 0;
+                    s_count.innerHTML = 0;
+
+                    p_bar.style.backgroundColor = 'transparent';
+                    b_bar.style.backgroundColor = 'transparent';
+                    c_bar.style.backgroundColor = 'transparent';
+                    e_bar.style.backgroundColor = 'transparent';
+                    s_bar.style.backgroundColor = 'transparent';
+                }
+
+                //round is over, update pokeballs left and pokemon caught
+                pokeball_number.innerHTML = "Pokeballs: " + pokeballs_remaining;
+                pokemon_caught.innerHTML = "Pokemon caught: " + total_caught;
+
+                //update count in pokedex
+                p_count.innerHTML = pikachu;
+                b_count.innerHTML = bulbasaur;
+                c_count.innerHTML = charmander;
+                e_count.innerHTML = eevee;
+                s_count.innerHTML = squirtle;
+
+                //width of bar
+                p_bar.style.width = `${pikachu/total_caught*100}%`;
+                b_bar.style.width = `${bulbasaur/total_caught*100}%`;
+                c_bar.style.width = `${charmander/total_caught*100}%`;
+                e_bar.style.width = `${eevee/total_caught*100}%`;
+                s_bar.style.width = `${squirtle/total_caught*100}%`;
+
+                //color of bar
+                p_bar.style.backgroundColor = 'yellow';
+                b_bar.style.backgroundColor = 'green';
+                c_bar.style.backgroundColor = 'orange';
+                e_bar.style.backgroundColor = 'brown';
+                s_bar.style.backgroundColor = 'lightblue';
+
+
+                if(total_caught == 0){
+                    p_bar.style.display = 'none';
+                    b_bar.style.display = 'none';
+                    c_bar.style.display = 'none';
+                    e_bar.style.display = 'none';
+                    s_bar.style.display = 'none';
+                }
+                else{
+                    p_bar.style.display = 'block';
+                    b_bar.style.display = 'block';
+                    c_bar.style.display = 'block';
+                    e_bar.style.display = 'block';
+                    s_bar.style.display = 'block';
+                }
+
+                if (pokeballs_remaining == 0){
+                    game_over.innerHTML = "Game over!"
+                    play_again_button.style.display = 'none';
+                }
+            }
+
+            //grass2 user clicks
+            grass2.onclick = function(){
+                // make the play again button visible
+                play_again_button.style.display = 'block';
+                start_over.style.display = 'block';
+
+                //one third chance
+                let chance = parseInt(Math.random() * 3);
+                
+                if (clicked == false){
+                    //reduce number of pokeballs
+                    pokeballs_remaining -= 1;
+
+                    //more pokeballs
+                    if (chance == 0){
+                        grass2.src = 'imagesMacro3/images/pokeballs.png';
+                        pokeballs_remaining += 2;
+                        caught = '2 pokeballs';
+                    }
+                    //nothing
+                    else if (chance == 1){
+                        grass2.src = '';
+                        caught = 'nothing';
+                    }
+                    //caught a pokemon
+                    else{
+                        let pokemon_chance = parseInt(Math.random() * 5);
+            
+                        //pikachu
+                        if (pokemon_chance == 0){
+                            grass2.src = pokemon[0].image;
+                            pikachu += 1;
+                            caught = 'pikachu';
+                        }
+                        //Bulbasaur
+                        else if (pokemon_chance == 1){
+                            grass2.src = pokemon[1].image;
+                            bulbasaur += 1;
+                            caught = 'bulbasaur';
+                        }
+                        //Charmander
+                        else if (pokemon_chance == 2){
+                            grass2.src = pokemon[2].image;
+                            charmander += 1;
+                            caught = 'charmander';
+                        }
+                        //Eevee
+                        else if (pokemon_chance == 3){
+                            grass2.src = pokemon[3].image;
+                            eevee += 1;
+                            caught = 'eevee';
+                        }
+                        //Squirtle
+                        else{
+                            grass2.src = pokemon[4].image;
+                            squirtle += 1;
+                            caught = 'squirtle';
+                        }
+                        total_caught += 1;                  
+                    }
+                }
+
+                clicked = true;
+
+                start_over.style.display = 'block';
+
+                //create new history item
+                if (caught){
+                    let item = document.createElement('p');
+                    let item_break = document.createElement('br');
+                    item.innerHTML = "you caught: " + caught + '!';
+                    item.classList.add('right');
+                    item_break.classList.add('right');
+                    history.insertBefore(item_break, history.firstChild);
+                    history.insertBefore(item, history.firstChild);
+                }
+                
+                caught = '';
+
+                //start over
+                start_over.onclick = function(){
+                    play_again_button.style.display = 'none';
+                    start_over.style.display = 'none';
+                    game_over.innerHTML = "";
+                    pokeballs_remaining = 5;
+                    total_caught = 0;
+                    pikachu = 0;
+                    bulbasaur = 0;
+                    charmander = 0;
+                    eevee = 0;
+                    squirtle = 0;
+
+                    clicked = false;
+                    
+                    grass1.src = "imagesMacro3/images/grass.png";
+                    grass2.src = "imagesMacro3/images/grass.png";
+                    grass3.src = "imagesMacro3/images/grass.png";
+                    
+                    pokeball_number.innerHTML = "Pokeballs: " + pokeballs_remaining;
+                    pokemon_caught.innerHTML = "Pokemon caught: " + total_caught;
+                    
+                    history.innerHTML = '';
+
+                    p_count.innerHTML = 0;
+                    b_count.innerHTML = 0;
+                    c_count.innerHTML = 0;
+                    e_count.innerHTML = 0;
+                    s_count.innerHTML = 0;
+
+                    p_bar.style.backgroundColor = 'transparent';
+                    b_bar.style.backgroundColor = 'transparent';
+                    c_bar.style.backgroundColor = 'transparent';
+                    e_bar.style.backgroundColor = 'transparent';
+                    s_bar.style.backgroundColor = 'transparent';
+                }
+
+                //round is over, update pokeballs left and pokemon caught
+                pokeball_number.innerHTML = "Pokeballs: " + pokeballs_remaining;
+                pokemon_caught.innerHTML = "Pokemon caught: " + total_caught;
+
+                //update count in pokedex
+                p_count.innerHTML = pikachu;
+                b_count.innerHTML = bulbasaur;
+                c_count.innerHTML = charmander;
+                e_count.innerHTML = eevee;
+                s_count.innerHTML = squirtle;
+
+                //width of bar
+                p_bar.style.width = `${pikachu/total_caught*100}%`;
+                b_bar.style.width = `${bulbasaur/total_caught*100}%`;
+                c_bar.style.width = `${charmander/total_caught*100}%`;
+                e_bar.style.width = `${eevee/total_caught*100}%`;
+                s_bar.style.width = `${squirtle/total_caught*100}%`;
+
+                //color of bar
+                p_bar.style.backgroundColor = 'yellow';
+                b_bar.style.backgroundColor = 'green';
+                c_bar.style.backgroundColor = 'orange';
+                e_bar.style.backgroundColor = 'brown';
+                s_bar.style.backgroundColor = 'lightblue';
+
+
+                if(total_caught == 0){
+                    p_bar.style.display = 'none';
+                    b_bar.style.display = 'none';
+                    c_bar.style.display = 'none';
+                    e_bar.style.display = 'none';
+                    s_bar.style.display = 'none';
+                }
+                else{
+                    p_bar.style.display = 'block';
+                    b_bar.style.display = 'block';
+                    c_bar.style.display = 'block';
+                    e_bar.style.display = 'block';
+                    s_bar.style.display = 'block';
+                }
+
+                if (pokeballs_remaining == 0){
+                    game_over.innerHTML = "Game over!"
+                    play_again_button.style.display = 'none';
+                }
+            }
+
+            //grass3 user clicks
+            grass3.onclick = function(){
+                // make the play again button visible
+                play_again_button.style.display = 'block';
+                start_over.style.display = 'block';
+
+                //one third chance
+                let chance = parseInt(Math.random() * 3);
+                
+                if (clicked == false){
+                    //reduce number of pokeballs
+                    pokeballs_remaining -= 1;
+
+                    //more pokeballs
+                    if (chance == 0){
+                        grass3.src = 'imagesMacro3/images/pokeballs.png';
+                        pokeballs_remaining += 2;
+                        caught = '2 pokeballs';
+                    }
+                    //nothing
+                    else if (chance == 1){
+                        grass3.src = '';
+                        caught = 'nothing';
+                    }
+                    //caught a pokemon
+                    else{
+                        let pokemon_chance = parseInt(Math.random() * 5);
+            
+                        //pikachu
+                        if (pokemon_chance == 0){
+                            grass3.src = pokemon[0].image;
+                            pikachu += 1;
+                            caught = 'pikachu';
+                        }
+                        //Bulbasaur
+                        else if (pokemon_chance == 1){
+                            grass3.src = pokemon[1].image;
+                            bulbasaur += 1;
+                            caught = 'bulbasaur';
+                        }
+                        //Charmander
+                        else if (pokemon_chance == 2){
+                            grass3.src = pokemon[2].image;
+                            charmander += 1;
+                            caught = 'charmander';
+                        }
+                        //Eevee
+                        else if (pokemon_chance == 3){
+                            grass3.src = pokemon[3].image;
+                            eevee += 1;
+                            caught = 'eevee';
+                        }
+                        //Squirtle
+                        else{
+                            grass3.src = pokemon[4].image;
+                            squirtle += 1;
+                            caught = 'squirtle';
+                        }
+                        total_caught += 1;  
+             
+                    }
+                }
+
+                clicked = true;
+
+                start_over.style.display = 'block';
+
+                //create new history item
+                if (caught){
+                    let item = document.createElement('p');
+                    let item_break = document.createElement('br');
+                    item.innerHTML = "you caught: " + caught + '!';
+                    item.classList.add('right');
+                    item_break.classList.add('right');
+                    history.insertBefore(item_break, history.firstChild);
+                    history.insertBefore(item, history.firstChild);
+                }
+                
+                caught = '';
+                //start over
+                start_over.onclick = function(){
+                    play_again_button.style.display = 'none';
+                    start_over.style.display = 'none';
+                    game_over.innerHTML = "";
+                    pokeballs_remaining = 5;
+                    total_caught = 0;
+                    pikachu = 0;
+                    bulbasaur = 0;
+                    charmander = 0;
+                    eevee = 0;
+                    squirtle = 0;
+
+                    clicked = false;
+                    
+                    grass1.src = "imagesMacro3/images/grass.png";
+                    grass2.src = "imagesMacro3/images/grass.png";
+                    grass3.src = "imagesMacro3/images/grass.png";
+                    
+                    pokeball_number.innerHTML = "Pokeballs: " + pokeballs_remaining;
+                    pokemon_caught.innerHTML = "Pokemon caught: " + total_caught;
+                    
+                    history.innerHTML = '';
+
+                    p_count.innerHTML = 0;
+                    b_count.innerHTML = 0;
+                    c_count.innerHTML = 0;
+                    e_count.innerHTML = 0;
+                    s_count.innerHTML = 0;
+
+                    p_bar.style.backgroundColor = 'transparent';
+                    b_bar.style.backgroundColor = 'transparent';
+                    c_bar.style.backgroundColor = 'transparent';
+                    e_bar.style.backgroundColor = 'transparent';
+                    s_bar.style.backgroundColor = 'transparent';
+                }
+
+                //round is over, update pokeballs left and pokemon caught
+                pokeball_number.innerHTML = "Pokeballs: " + pokeballs_remaining;
+                pokemon_caught.innerHTML = "Pokemon caught: " + total_caught;
+
+                //update count in pokedex
+                p_count.innerHTML = pikachu;
+                b_count.innerHTML = bulbasaur;
+                c_count.innerHTML = charmander;
+                e_count.innerHTML = eevee;
+                s_count.innerHTML = squirtle;
+
+                //width of bar
+                p_bar.style.width = `${pikachu/total_caught*100}%`;
+                b_bar.style.width = `${bulbasaur/total_caught*100}%`;
+                c_bar.style.width = `${charmander/total_caught*100}%`;
+                e_bar.style.width = `${eevee/total_caught*100}%`;
+                s_bar.style.width = `${squirtle/total_caught*100}%`;
+
+                //color of bar
+                p_bar.style.backgroundColor = 'yellow';
+                b_bar.style.backgroundColor = 'green';
+                c_bar.style.backgroundColor = 'orange';
+                e_bar.style.backgroundColor = 'brown';
+                s_bar.style.backgroundColor = 'lightblue';
+
+                if(total_caught == 0){
+                    p_bar.style.display = 'none';
+                    b_bar.style.display = 'none';
+                    c_bar.style.display = 'none';
+                    e_bar.style.display = 'none';
+                    s_bar.style.display = 'none';
+                }
+                else{
+                    p_bar.style.display = 'block';
+                    b_bar.style.display = 'block';
+                    c_bar.style.display = 'block';
+                    e_bar.style.display = 'block';
+                    s_bar.style.display = 'block';
+                }
+                
+
+                if (pokeballs_remaining == 0){
+                    game_over.innerHTML = "Game over!"
+                    play_again_button.style.display = 'none';
+                }
+            }
+            
+            play_again_button.onclick = function(){
+                clicked = false;
+                grass1.src = "imagesMacro3/images/grass.png";
+                grass2.src = "imagesMacro3/images/grass.png";
+                grass3.src = "imagesMacro3/images/grass.png";
+            }
+
+
+        </script>
+	</body>
+</html>

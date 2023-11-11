@@ -1,0 +1,42 @@
+@font-face{
+    font-family: bebas;
+    src: url(../fonts/BebasNeue-Regular.ttf);
+}
+
+#mobile{
+    display: none;
+}
+
+#tablet{
+    display: none;
+}
+
+.firstrow{
+    padding-top: 65px;
+}
+
+.lastrow{
+    padding-bottom: 40px;
+}
+
+.card{
+    padding: 20px;
+    align-items: center;
+    border: none;
+    opacity: 1;
+    transition: .5s ease;
+    backface-visibility: hidden;
+}
+
+.cardborder{
+    border: 1px solid lightsteelblue;
+    border-radius: 5px;
+}
+
+.card:hover{
+    opacity: 0.3;
+  }
+
+.name{
+    color: lightsteelblue;
+}

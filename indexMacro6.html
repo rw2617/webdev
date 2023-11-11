@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Memory Matching Madness</title>
+        <style>
+            body {
+                background-color: black;
+                color: white;
+                text-align: center;
+            }
+            .hidden {
+                display: none;
+            }
+            #tile_container {
+                width: 400px;
+                margin: auto;
+            }
+            #tile_container img {
+                width: 100px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Memory Matching Madness</h1>
+
+        <div id="panel_gamestart">
+            <p>Let's play! Click to begin!</p>
+            <label for="difficulty">Difficulty</label><br>
+                <select id="difficulty">
+                    <option value="12">Easy (3x4)</option>
+                    <option value="20">Medium (4x5)</option>
+                    <option value="30">Hard (5x6)</option>
+                </select><br>
+            <button id="button_playgame">Start!</button>
+        </div>
+        <div id="panel_gameplaying" class="hidden">
+            <div id="timer_container">0 seconds elapsed</div>
+            <div id="tile_container"></div>
+        </div>
+        <div id="panel_gameover" class="hidden">
+            <p>Game over!</p>
+            <p id="your_time">Your time: 0 sec</p>
+            <p id="best_time">Best time: 0 sec</p>
+            <form id="leader_form" class="hidden">
+                Congratulations! You got the best time! Enter your name for the leaderboard!<br>
+                <input type="text" id="leader"><br>
+                <button id="button_leader">Submit</button>
+            </form> 
+            <button id="button_playagain">Play Again</button>
+        </div>
+
+        <script>
+            // DOM queries
+            const panel_gamestart = document.querySelector('#panel_gamestart');
+            const button_playgame = document.querySelector('#button_playgame');
+            const panel_gameplaying = document.querySelector('#panel_gameplaying');
+            const timer_container = document.querySelector('#timer_container');
+            const tile_container = document.querySelector('#tile_container');
+            const panel_gameover = document.querySelector('#panel_gameover');
+            const your_time = document.querySelector('#your_time');
+            const best_time = document.querySelector('#best_time');
+            const button_playagain = document.querySelector('#button_playagain');
+            const button_leader = document.querySelector('#button_leader');
+            const leader = document.querySelector('#leader');
+            const leader_form = document.querySelector('#leader_form');
+            const difficulty = document.querySelector('#difficulty');
+            const correct = new Audio('imagesMacro6/correct.wav');
+            const wrong = new Audio('imagesMacro6/wrong.wav');
+
+            // global variables to keep track of our picked tiles
+            let tile1 = false;
+            let tile2 = false;
+            let num_tiles = localStorage.getItem("dif");
+            
+            //set best time to a very large number and leader to a blank
+            localStorage.setItem("bestTimeEasy", 999999999);
+            localStorage.setItem("leaderEasy", "_____");
+
+            localStorage.setItem("bestTimeMed", 999999999);
+            localStorage.setItem("leaderMed", "_____");
+
+            localStorage.setItem("bestTimeHard", 999999999);
+            localStorage.setItem("leaderHard", "_____");
+
+            button_playgame.onclick = function(e) {
+                tile_container.innerHTML = '';
+
+                if(difficulty.value == '12'){
+                    num_tiles = 12;
+                    localStorage.setItem("dif", '12');
+                    tile_container.style.width = "400px";
+                    difficulty.children[0].setAttribute('selected','selected');
+                }
+                if(difficulty.value == '20'){
+                    num_tiles = 20;
+                    localStorage.setItem("dif", '20');
+                    tile_container.style.width = "500px";
+                    difficulty.children[1].setAttribute('selected','selected');
+                }
+                if(difficulty.value == '30'){
+                    num_tiles = 30;
+                    localStorage.setItem("dif", '30');
+                    tile_container.style.width = "600px";
+                    difficulty.children[2].setAttribute('selected','selected');
+                }
+
+                panel_gamestart.classList.add('hidden');
+                panel_gameplaying.classList.remove('hidden');
+
+                let assets = ['snorlax.png', 'electrabuzz.png', 'chansey.png', 'oddish.png',
+                            'pikachu.png', 'paras.png', 'arcanine.png', 'ponita.png',
+                            'venonat.png', 'eggsecute.png', 'machop.png', 'pidgey.png',
+                            'psyduck.png', 'tauros.png', 'vulpix.png', 'gloom.png',
+                            'krabby.png', 'butterfree.png', 'bulbasaur.png', 'clefairy.png',
+                            'koffing.png', 'goldeen.png', 'magikarp.png', 'beedrill.png',
+                            'lapras.png', 'meowth.png', 'ekans.png', 'jigglypuff.png',
+                            'horsea.png', 'polywog.png', 'sandshrew.png', 'rattata.png',
+                            'gengar.png', 'eevee.png', 'bellsprout.png', 'squirtle.png',
+                            'seel.png', 'caterpie.png'];
+
+                // pick 6 graphics at random
+                let selectedTiles = [];
+
+                while (selectedTiles.length < num_tiles) {
+                    // pick a random one from the assets array
+                    let i = parseInt( Math.random() * assets.length );
+                    selectedTiles.push( assets[i] );
+                    selectedTiles.push( assets[i] );
+                    assets.splice(i, 1);
+                }
+
+                //shuffle the tiles
+                let shuffledTiles = [];
+
+                while(shuffledTiles.length < num_tiles){
+                    let i = parseInt(Math.random() * selectedTiles.length);
+                    shuffledTiles.push(selectedTiles[i]);
+                    selectedTiles.splice(i, 1);
+                };
+
+                //number of matches
+                let matches = 0;
+
+                // create tiles for these graphics
+                for (let i = 0; i < shuffledTiles.length; i++) {
+                    // create a tile
+                    let tile = document.createElement('img');
+                    tile.src = 'imagesMacro6/pokeball.png';
+                    tile.dataset.secret = 'imagesMacro6/' + shuffledTiles[i];
+                    tile_container.appendChild(tile);
+
+                    // set up event listeners on each tile
+                    tile.onclick = function(event) {
+                        
+                        // have no tiles been clicked?
+                        if (tile1 == false && tile2 == false) {
+                            // reveal tile 1
+
+                            // switch graphics
+                            event.currentTarget.src = event.currentTarget.dataset.secret;
+
+                            // mark this as tile1
+                            tile1 = event.currentTarget;
+                        }
+                        else if (tile2 == false) {
+                            // reveal this tile
+
+                            // switch graphics
+                            event.currentTarget.src = event.currentTarget.dataset.secret;
+
+                            // mark this as tile1
+                            tile2 = event.currentTarget;
+
+                            // did they get it right?
+                            if (tile1.dataset.secret == tile2.dataset.secret) {
+                                // reset the game back to the original state and allow more clicks
+                                correct.play();
+                                tile1 = false;
+                                tile2 = false;
+                                console.log("MATCH");
+                                matches++;
+                            }
+                            else {
+                                // they got it wrong
+                                setTimeout( function() {
+                                    wrong.play();
+                                    tile1.src = 'imagesMacro6/pokeball.png';
+                                    tile2.src = 'imagesMacro6/pokeball.png';
+                                    tile1 = false;
+                                    tile2 = false;
+                                }, 1000);
+                            }
+                        }
+                    }
+                }
+
+                //timer start
+                
+                let sec = 0;
+
+                //all tiles are matched, go to game over
+                
+                const elapsed = setInterval(function() {
+                    sec++;
+                    timer_container.innerHTML = `${sec} seconds elapsed`;
+
+                    if (matches >= num_tiles/2){
+                        clearInterval(elapsed);
+                        if(num_tiles == 12){
+                            if (localStorage.getItem("bestTimeEasy") > sec){
+                                localStorage.setItem("bestTimeEasy", `${sec}`);
+                                let bestEasy = localStorage.getItem("bestTimeEasy");
+
+                                leader_form.classList.remove("hidden");
+
+                                button_leader.onclick = function(e) {
+                                    e.preventDefault();
+                                    if(leader){
+                                        localStorage.setItem("leaderEasy", leader.value);
+                                        let leadEasy = localStorage.getItem("leaderEasy");
+                                        best_time.innerHTML = `Best Time: ${bestEasy} sec by ${leadEasy}`;
+                                        leader_form.classList.add("hidden");
+                                    }
+                                }
+                            }
+                            let leadEasy = localStorage.getItem("leaderEasy");
+                            let bestEasy = localStorage.getItem("bestTimeEasy");
+
+                            panel_gameplaying.classList.add('hidden');
+                            panel_gameover.classList.remove('hidden');
+                            your_time.innerHTML = `Your Time: ${sec} sec`;
+                            best_time.innerHTML = `Best Time: ${bestEasy} sec by ${leadEasy}`;
+                        }
+                        else if(num_tiles == 20){
+                            if (localStorage.getItem("bestTimeMed") > sec){
+                                localStorage.setItem("bestTimeMed", `${sec}`);
+                                let bestMed = localStorage.getItem("bestTimeMed");
+
+                                leader_form.classList.remove("hidden");
+
+                                button_leader.onclick = function(e) {
+                                    e.preventDefault();
+                                    if(leader){
+                                        localStorage.setItem("leaderMed", leader.value);
+                                        let leadMed = localStorage.getItem("leaderMed");
+                                        best_time.innerHTML = `Best Time: ${bestMed} sec by ${leadMed}`;
+                                        leader_form.classList.add("hidden");
+                                    }
+                                }
+                            }
+                            let leadMed = localStorage.getItem("leaderMed");
+                            let bestMed = localStorage.getItem("bestTimeMed");
+
+                            panel_gameplaying.classList.add('hidden');
+                            panel_gameover.classList.remove('hidden');
+                            your_time.innerHTML = `Your Time: ${sec} sec`;
+                            best_time.innerHTML = `Best Time: ${bestMed} sec by ${leadMed}`;
+                        }
+                        else if(num_tiles == 30){
+                            if (localStorage.getItem("bestTimeHard") > sec){
+                                localStorage.setItem("bestTimeHard", `${sec}`);
+                                let bestHard = localStorage.getItem("bestTimeHard");
+
+                                leader_form.classList.remove("hidden");
+
+                                button_leader.onclick = function(e) {
+                                    e.preventDefault();
+                                    if(leader){
+                                        localStorage.setItem("leaderHard", leader.value);
+                                        let leadHard = localStorage.getItem("leaderHard");
+                                        best_time.innerHTML = `Best Time: ${bestHard} sec by ${leadHard}`;
+                                        leader_form.classList.add("hidden");
+                                    }
+                                }
+                            }
+                            let leadHard = localStorage.getItem("leaderHard");
+                            let bestHard = localStorage.getItem("bestTimeHard");
+
+                            panel_gameplaying.classList.add('hidden');
+                            panel_gameover.classList.remove('hidden');
+                            your_time.innerHTML = `Your Time: ${sec} sec`;
+                            best_time.innerHTML = `Best Time: ${bestHard} sec by ${leadHard}`;
+                        }    
+                    }
+                }, 1000);
+            
+            }
+
+            button_playagain.onclick = function(e) {
+                panel_gameover.classList.add('hidden');
+                panel_gameplaying.classList.add('hidden');
+                panel_gamestart.classList.remove('hidden');
+
+                if(difficulty.value == '12'){
+                    num_tiles = 12;
+                    localStorage.setItem("dif", '12');
+                    tile_container.style.width = "400px";
+                }
+                if(difficulty.value == '20'){
+                    num_tiles = 20;
+                    localStorage.setItem("dif", '20');
+                    tile_container.style.width = "500px";
+                }
+                if(difficulty.value == '30'){
+                    num_tiles = 30;
+                    localStorage.setItem("dif", '30');
+                    tile_container.style.width = "600px";
+                }
+
+                //clear old tiles
+                tile_container.innerHTML = '';
+
+                let assets = ['snorlax.png', 'electrabuzz.png', 'chansey.png', 'oddish.png',
+                            'pikachu.png', 'paras.png', 'arcanine.png', 'ponita.png',
+                            'venonat.png', 'eggsecute.png', 'machop.png', 'pidgey.png',
+                            'psyduck.png', 'tauros.png', 'vulpix.png', 'gloom.png',
+                            'krabby.png', 'butterfree.png', 'bulbasaur.png', 'clefairy.png',
+                            'koffing.png', 'goldeen.png', 'magikarp.png', 'beedrill.png',
+                            'lapras.png', 'meowth.png', 'ekans.png', 'jigglypuff.png',
+                            'horsea.png', 'polywog.png', 'sandshrew.png', 'rattata.png',
+                            'gengar.png', 'eevee.png', 'bellsprout.png', 'squirtle.png',
+                            'seel.png', 'caterpie.png'];
+
+                // pick 6 graphics at random
+                let selectedTiles = [];
+
+                while (selectedTiles.length < 12) {
+                    // pick a random one from the assets array
+                    let i = parseInt( Math.random() * assets.length );
+                    selectedTiles.push( assets[i] );
+                    selectedTiles.push( assets[i] );
+                    assets.splice(i, 1);
+                }
+
+                //shuffle the tiles
+                let shuffledTiles = [];
+
+                while(shuffledTiles.length < 12){
+                    let i = parseInt(Math.random() * selectedTiles.length);
+                    shuffledTiles.push(selectedTiles[i]);
+                    selectedTiles.splice(i, 1);
+                };
+
+                //number of matches, total 6
+                let matches = 0;
+
+                // create tiles for these graphics
+                for (let i = 0; i < shuffledTiles.length; i++) {
+                    // create a tile
+                    let tile = document.createElement('img');
+                    tile.src = 'imagesMacro6/pokeball.png';
+                    tile.dataset.secret = 'imagesMacro6/' + shuffledTiles[i];
+                    tile_container.appendChild(tile);
+
+                    // set up event listeners on each tile
+                    tile.onclick = function(event) {
+                        
+                        // have no tiles been clicked?
+                        if (tile1 == false && tile2 == false) {
+                            // reveal tile 1
+
+                            // switch graphics
+                            event.currentTarget.src = event.currentTarget.dataset.secret;
+
+                            // mark this as tile1
+                            tile1 = event.currentTarget;
+                        }
+                        else if (tile2 == false) {
+                            // reveal this tile
+
+                            // switch graphics
+                            event.currentTarget.src = event.currentTarget.dataset.secret;
+
+                            // mark this as tile1
+                            tile2 = event.currentTarget;
+
+                            // did they get it right?
+                            if (tile1.dataset.secret == tile2.dataset.secret) {
+                                // reset the game back to the original state and allow more clicks
+                                tile1 = false;
+                                tile2 = false;
+                                console.log("MATCH");
+                                matches++;
+                            }
+                            else {
+                                // they got it wrong
+                                setTimeout( function() {
+                                    tile1.src = 'imagesMacro6/pokeball.png';
+                                    tile2.src = 'imagesMacro6/pokeball.png';
+                                    tile1 = false;
+                                    tile2 = false;
+                                }, 1000);
+                            }
+                        }
+                    }
+                }
+
+                //timer start
+                
+                let sec = 0;
+
+                //all tiles are matched, go to game over
+                
+                const elapsed = setInterval(function() {
+                    sec++;
+                    timer_container.innerHTML = `${sec} seconds elapsed`;
+
+                    if (matches >= num_tiles/2){
+                        clearInterval(elapsed);
+                        if(num_tiles == 12){
+                            if (localStorage.getItem("bestTimeEasy") > sec){
+                                localStorage.setItem("bestTimeEasy", `${sec}`);
+                                let bestEasy = localStorage.getItem("bestTimeEasy");
+
+                                leader_form.classList.remove("hidden");
+
+                                button_leader.onclick = function(e) {
+                                    e.preventDefault();
+                                    if(leader){
+                                        localStorage.setItem("leaderEasy", leader.value);
+                                        let leadEasy = localStorage.getItem("leaderEasy");
+                                        best_time.innerHTML = `Best Time: ${bestEasy} sec by ${leadEasy}`;
+                                        leader_form.classList.add("hidden");
+                                    }
+                                }
+                            }
+                            let leadEasy = localStorage.getItem("leaderEasy");
+                            let bestEasy = localStorage.getItem("bestTimeEasy");
+
+                            panel_gameplaying.classList.add('hidden');
+                            panel_gameover.classList.remove('hidden');
+                            your_time.innerHTML = `Your Time: ${sec} sec`;
+                            best_time.innerHTML = `Best Time: ${bestEasy} sec by ${leadEasy}`;
+                        }
+                        else if(num_tiles == 20){
+                            if (localStorage.getItem("bestTimeMed") > sec){
+                                localStorage.setItem("bestTimeMed", `${sec}`);
+                                let bestMed = localStorage.getItem("bestTimeMed");
+
+                                leader_form.classList.remove("hidden");
+
+                                button_leader.onclick = function(e) {
+                                    e.preventDefault();
+                                    if(leader){
+                                        localStorage.setItem("leaderMed", leader.value);
+                                        let leadMed = localStorage.getItem("leaderMed");
+                                        best_time.innerHTML = `Best Time: ${bestMed} sec by ${leadMed}`;
+                                        leader_form.classList.add("hidden");
+                                    }
+                                }
+                            }
+                            let leadMed = localStorage.getItem("leaderMed");
+                            let bestMed = localStorage.getItem("bestTimeMed");
+
+                            panel_gameplaying.classList.add('hidden');
+                            panel_gameover.classList.remove('hidden');
+                            your_time.innerHTML = `Your Time: ${sec} sec`;
+                            best_time.innerHTML = `Best Time: ${bestMed} sec by ${leadMed}`;
+                        }
+                        else if(num_tiles == 30){
+                            if (localStorage.getItem("bestTimeHard") > sec){
+                                localStorage.setItem("bestTimeHard", `${sec}`);
+                                let bestHard = localStorage.getItem("bestTimeHard");
+
+                                leader_form.classList.remove("hidden");
+
+                                button_leader.onclick = function(e) {
+                                    e.preventDefault();
+                                    if(leader){
+                                        localStorage.setItem("leaderHard", leader.value);
+                                        let leadHard = localStorage.getItem("leaderHard");
+                                        best_time.innerHTML = `Best Time: ${bestHard} sec by ${leadHard}`;
+                                        leader_form.classList.add("hidden");
+                                    }
+                                }
+                            }
+                            let leadHard = localStorage.getItem("leaderHard");
+                            let bestHard = localStorage.getItem("bestTimeHard");
+
+                            panel_gameplaying.classList.add('hidden');
+                            panel_gameover.classList.remove('hidden');
+                            your_time.innerHTML = `Your Time: ${sec} sec`;
+                            best_time.innerHTML = `Best Time: ${bestHard} sec by ${leadHard}`;
+                        }    
+                    }
+                }, 1000);
+            }
+        </script>
+    </body>
+</html>

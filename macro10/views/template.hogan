@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+        body{
+          background-color: lightpink;
+          }
+    </style>
+  </head>
+  <body>
+    <h1>welcome</h1>
+    <div id="count">You are visitor number {{number}}, {{visitor}}!</div>
+    <form method="POST" action="/visitor">
+        Name: <input type="text" name="name">
+        <input type="submit">
+    </form>
+    <div>{{about}}</div>
+    <div>{{contact}}</div>
+    <img src={{pic}}>
+  </body>
+</html>

@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en-us">
+	<head>
+		<meta charset="utf-8">
+        <title>Everything is...</title>
+        <style>
+            #container {
+                width: 800px;
+                height: 600px;
+                margin: auto;
+                position: relative;
+                box-sizing: border-box;
+            }
+            #background {
+                width: 800px;
+                height: 600px;
+                position: absolute;
+                top: 0px;
+                left: 0px;
+                z-index: 0;
+            }
+            #title {
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                z-index: 1;
+                background-color: rgba(255,255,255,.5);
+            }
+            #infopanel {
+                position: absolute;
+                top: 100px;
+                left: 20px;
+                z-index: 1;
+                background-color: rgba(255,255,255,.5);
+            }
+            #time {
+                position: absolute;
+                top: 150px;
+                left: 20px;
+                z-index: 1;
+                background-color: rgba(255,255,255,.5);
+            }
+            #numbers{
+                position: absolute;
+                top: 200px;
+                left: 20px;
+                z-index: 1;
+                background-color: rgba(255,255,255,.5);
+            }
+            #body {
+                position: absolute;
+                bottom: 0px;
+                right: 40px;
+                z-index: 1;
+            }
+            #head {
+                position: absolute;
+                bottom: 275px;
+                right: 115px;
+                z-index: 1;
+            }
+            #decal{
+                width: 60px;
+                height: 60px;
+                position: absolute;
+                bottom: 190px;
+                right: 135px;
+                z-index: 2;
+            }
+        </style>
+	</head>
+	<body>
+        <div id="container">
+            <img id="head" src="imagesMacro2/heads/head1.png">
+            <img id="body" src="imagesMacro2/bodies/body1.png">
+            <img id="decal" src="imagesMacro2/decals/decal1.png">
+            <img id="background" src = "imagesMacro2/backgrounds/afternoon.png">
+            <script>
+                //random word
+                const words = ['Awesome', 'Fantastic', 'Fabulous', 'Superb', 'Perfect', 'Brilliant', 'Coming up Roses'];
+                let i = parseInt(Math.random() * words.length);
+                let word = words[i];
+
+                document.write(`<h1 id="title">Everything is ${word}!</h1>`);
+
+                //date and time
+                let rn = new Date();
+                let hour = rn.getHours();
+                let min = rn.getMinutes();
+
+                document.write(`<h3 id="time">The current time is ${hour}:${min}!</h3>`)
+
+                //random head
+                const head = document.getElementById('head');
+                const heads = ['imagesMacro2/heads/head1.png', 'imagesMacro2/heads/head2.png', 'imagesMacro2/heads/head3.png', 'imagesMacro2/heads/head4.png', 'imagesMacro2/heads/head5.png', 'imagesMacro2/heads/head6.png'];
+                let j = parseInt(Math.random() * heads.length);
+                let random_head = heads[j];
+                head.src = random_head;
+
+                //random body
+                const body = document.getElementById('body');
+                const bodies = ['imagesMacro2/bodies/body1.png', 'imagesMacro2/bodies/body2.png', 'imagesMacro2/bodies/body3.png', 'imagesMacro2/bodies/body4.png', 'imagesMacro2/bodies/body5.png', 'imagesMacro2/bodies/body6.png'];
+                let k = parseInt(Math.random() * bodies.length);
+                let random_body = bodies[k];
+                body.src = random_body;
+
+                //random decal
+                const decal = document.getElementById('decal');
+                const decals = ['imagesMacro2/decals/decal1.png', 'imagesMacro2/decals/decal2.png', 'imagesMacro2/decals/decal3.png', 'imagesMacro2/decals/decal4.png', 'imagesMacro2/decals/decal5.png', 'imagesMacro2/decals/decal6.png', 'imagesMacro2/decals/decal7.png'];
+                let l = parseInt(Math.random() * decals.length);
+                let random_decal = decals[l];
+                decal.src = random_decal;
+
+                //lucky numbers
+                while(true){
+                    let answer = prompt("enter a number greater than 3")
+                    if (answer > 3){
+                        //first lucky number
+                        let one = parseInt(Math.random() * answer) + 1;
+                        
+                        //second lucky number
+                        let two = parseInt(Math.random() * answer)+ 1;
+                        while(one == two){
+                            two = parseInt(Math.random() * answer)+ 1;
+                            if (one != two){
+                                break;
+                            }
+                        }
+
+                        //third lucky number
+                        let three = parseInt(Math.random() * answer)+ 1;
+                        while(one == three || two == three){
+                            three = parseInt(Math.random() * answer)+ 1;
+                            if (one != two && two != three){
+                                break;
+                            }
+                        }
+                        document.write(`<h3 id="numbers">Your lucky numbers are: ${one}, ${two}, and ${three}!</h3>`);
+                        break;
+                    }
+                }
+
+                //change background
+                const background = document.getElementById('background');
+            
+                if (hour < 6){
+                    document.write(`<h3 id="infopanel">Good Night!</h3>`);
+                    background.src = "imagesMacro2/backgrounds/night.png";
+                }
+                else if (hour < 12){
+                    document.write(`<h3 id="infopanel">Good Morning!</h3>`);
+                    background.src = "imagesMacro2/backgrounds/morning.png";
+                }
+                else if (hour < 18){
+                    document.write(`<h3 id="infopanel">Good Afternoon!</h3>`);
+                    hour = hour - 12;
+                    background.src = "imagesMacro2/backgrounds/afternoon.png";
+                }
+                else {
+                    document.write(`<h3 id="infopanel">Good Evening!</h3>`);
+                    hour = hour - 12;
+                    background.src = "imagesMacro2/backgrounds/evening.png";
+                }
+            </script>
+        </div>
+	</body>
+</html>

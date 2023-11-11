@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Let's Chat!</title>
+        <style>
+            #previous_messages{
+                width: 100%;
+                height: 300px;
+                resize: none;
+            }
+            .hidden{
+                display: none;
+            }
+        </style>
+        <script src="helpers.js"></script>
+    </head>
+    <body>
+        <h1>Let's Chat!</h1>
+
+        <div id="panel_nickname">
+            <input type="text" id="nickname">
+            <button id="button_savenickname">save nickname and start chatting</button>
+        </div>
+
+        <div id="panel_chat" class="hidden">
+            <textarea id="previous_messages" readonly></textarea>
+            <input type="text" id="message">
+            <button id="button_sendmessage">send message</button>
+        </div>
+
+        <script>
+            //global variables
+            let userNickname;
+
+            document.querySelector('#button_savenickname').onclick = function(e){
+                //check if this username has been used
+                performFetch({
+                    url:'api.php?command=user',
+                    method: 'POST',
+                    data: {
+                        command: 'user',
+                        nickname: userNickname
+
+                    },
+                    success: function(data){
+                        console.log('success');
+                        console.log(data);
+                        if(data != 'duplicate'){
+                            //store nickname for future use
+                            userNickname = document.querySelector('#nickname').value;
+
+                            //hide nickname panel
+                            document.querySelector('#panel_nickname').classList.add('hidden');
+
+                            //show chat panel
+                            document.querySelector('#panel_chat').classList.remove('hidden');
+                        }
+                        else{
+
+                        }
+                    },
+                    error: function(error){
+                        console.log('error');
+                    }
+                })
+
+
+                
+
+            }
+
+            //when user types new chat message
+            document.querySelector('#button_sendmessage').onclick = function(e){
+                //contact server with message and nickname
+                performFetch({
+                    url:'api.php?command=save',
+                    method: 'POST',
+                    data: {
+                        command: 'save',
+                        nickname: userNickname,
+                        message: document.querySelector('#message').value
+
+                    },
+                    success: function(data){
+                        console.log('success');
+                        console.log(data);
+                        if(data != 'missingdata'){
+                            document.querySelector('#previous_messages').value += data + "\n";
+                        }
+                    },
+                    error: function(error){
+                        console.log('error');
+                    }
+                })
+                
+            }
+
+            function getAllMessages(){
+                performFetch({
+                    url:'api.php',
+                    method: 'GET',
+                    data: {
+                        command: 'get_all_messages'
+                    },
+
+                    success: function(data){
+                        console.log(data);
+
+                        // take what the server gave us and turn it into a JS object
+                        data = JSON.parse( data );
+
+                        console.log(data);
+
+                        document.querySelector('#previous_messages').value = '';
+
+                        for (let i = 0; i < data.length; i++) {
+                            document.querySelector('#previous_messages').value += data[i] + "\n";
+                        }
+
+                    },
+                    error: function(error){
+                        console.log('bleh');
+                    }
+                })
+            }
+
+            //auto scroll to bottom of messages
+            var prev = document.querySelector('#previous_messages');
+
+            setInterval(function(){
+                prev.scrollTop = prev.scrollHeight;
+                console.log('scroll');
+            }, 1000);
+
+            //setInterval()
+
+
+        </script>
+
+    </body>
+
+</html>

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Seasonal To-Do List</title>
+        <style>
+            body{
+                background-image: url(imagesMacro5/images/corkboard.jpg);
+            }
+
+            #add_item{
+                position: absolute;
+                bottom: 20px;
+                right: 20px;
+            }
+            #add_item:hover { 
+                transform: scale(1.2);
+            }
+
+            #season_filter{
+                position: absolute;
+                top: 20px;
+                right: 20px;
+            }
+
+            #panel_add_new_item{
+                width: 500px;
+                height: 250px;
+                background-color: white;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                margin-left: -250px;
+                margin-top: -125px;
+                padding: 20px;
+                border: 3px solid black;
+            }
+
+            #panel_edit{
+                width: 500px;
+                height: 250px;
+                background-color: white;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                margin-left: -250px;
+                margin-top: -125px;
+                padding: 20px;
+                border: 3px solid black;
+            }
+
+            .hidden{
+                display: none;
+            }
+
+            .error{
+                background-color: red;
+                color: white;
+            }
+
+            .item{
+                float: left;
+                height: 100px;
+                width: 100px;
+                margin-right: 20px;
+                padding: 5px;
+            }
+            
+            .winter{
+                background-color: lightblue;
+            }
+            .spring{
+                background-color: honeydew;
+            }
+            .summer{
+                background-color: pink;
+            }
+            .fall{
+                background-color: sandybrown;
+            }
+
+            #display_item{
+                width: 500px;
+                height: 250px;
+                background-color: white;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                margin-left: -250px;
+                margin-top: -125px;
+                padding: 20px;
+                border: 3px solid black;
+            }
+
+            .delete_button{
+                float: right;
+                top: 5px;
+                right: 5px;
+            }
+
+        </style>
+    </head>
+    <body>
+        <h1>Seasonal To-Do List</h1>
+
+        <select id="season_filter">
+            <option value="all">Show all seasons</option>
+            <option value="winter">Winter</option>
+            <option value="spring">Spring</option>
+            <option value="summer">Summer</option>
+            <option value="fall">Fall</option>
+        </select>
+
+        <img id="add_item" src="imagesMacro5/images/add_button.png">
+
+        <div id="panel_add_new_item" class="hidden">
+            <h2>Add New Item</h2>
+
+            <div class="error hidden" id="add_error">Please fill out all of the form fields!</div>
+
+            <form>
+                <label for="title">Title</label><br>
+                <input type="text" id="title"><br>
+
+                <label for="category">Category</label><br>
+                <select id="category">
+                    <option value="winter">Winter</option>
+                    <option value="spring">Spring</option>
+                    <option value="summer">Summer</option>
+                    <option value="fall">Fall</option>
+                </select><br>
+        
+                <label for="description">Description</label><br>
+                <textarea id="description"></textarea><br>
+
+                <button id="add_save">Save</button>
+                <button id="add_cancel">Cancel</button>
+            </form>
+        </div>
+
+        <div id="display_item" class="hidden">
+            <h2 id="display_title"></h2>
+            <div id="display_category"></div><br>
+            <div id="display_description"></div>
+            <hr>
+            <div id="display_created"></div><br>
+            <div id="display_accessed"></div><br>
+            <button id="display_close">Close</button>
+            <button id="display_edit">Edit</button>
+        </div>
+
+        <div id="panel_edit" class="hidden">
+            <h2>Edit Item</h2>
+            <form>
+                <label for="title">Title</label><br>
+                <input type="text" id="title_edit"><br>
+
+                <label for="category">Category</label><br>
+                <select id="category_edit">
+                    <option value="winter">Winter</option>
+                    <option value="spring">Spring</option>
+                    <option value="summer">Summer</option>
+                    <option value="fall">Fall</option>
+                </select><br>
+        
+                <label for="description"></label><br>
+                <textarea id="description_edit"></textarea><br>
+
+                <button id="edit_save">Save</button>
+                <button id="edit_cancel">Cancel</button>
+            </form>
+        </div>
+
+        <div id="item_container"></div>
+
+        <script>
+            // dom queries
+            const panel_add_new_item = document.querySelector("#panel_add_new_item");
+            const add_item = document.querySelector("#add_item");
+            const add_cancel = document.getElementById('add_cancel');
+            const add_save = document.getElementById('add_save');
+            const add_error = document.getElementById('add_error');
+            const item_container = document.getElementById('item_container');
+            const item = document.querySelector('#item');
+            const display_item = document.querySelector('#display_item');
+            const display_title = document.querySelector('#display_title');
+            const display_category = document.querySelector('#display_category');
+            const display_description = document.querySelector('#display_description');
+            const display_created = document.querySelector('#display_created');
+            const display_accessed = document.querySelector('#display_accessed');
+            const display_close = document.querySelector('#display_close');
+            const display_edit = document.querySelector('#display_edit');
+            const delete_button = document.querySelector("#delete_button");
+            const season_filter = document.querySelector("#season_filter");
+            const panel_edit = document.querySelector("#panel_edit");
+            const edit_save = document.querySelector("#edit_save");
+            const edit_cancel = document.querySelector("#edit_cancel");
+
+            // when the user clicks on the + button trigger the panel to appear
+            add_item.onclick = function(e) {
+                panel_add_new_item.classList.remove('hidden');
+
+                // erase the form
+                document.querySelector('#title').value = '';
+                document.querySelector('#description').value = '';
+                document.querySelector('#category').value = 'winter';
+            }
+
+            add_cancel.onclick = function(e) {
+                e.preventDefault();
+                panel_add_new_item.classList.add('hidden');
+            }
+
+            add_save.onclick = function(e) {
+                e.preventDefault();
+
+                var created = Date();
+
+                // grab the value from the title, category and description fields
+                
+                let t = document.querySelector('#title').value;
+                let d = document.querySelector('#description').value;
+                let c = document.querySelector('#category').value;
+
+                // if we do have all 3, create the to-do item
+                if (t && d && c) {
+                    add_error.classList.add('hidden');
+
+                    // create our new to-do item
+                    let item = document.createElement('div');
+                    
+                    item.innerHTML=`${t} <img src=\"imagesMacro5/images/delete_button.png\" class=\"delete_button hidden\">`;
+                    item.classList.add('item');
+                    item.classList.add(c);
+                    item_container.appendChild(item);
+                    
+                    // have the item rememeber all the data it knows about itself
+                    item.dataset.title = t;
+                    item.dataset.description = d;
+                    item.dataset.category = c;
+                    item.dataset.created = created;
+
+                    //delete button only appears when hovering on item
+                    item.addEventListener("mouseover", function(event){
+                        let f = event.target.children[0];
+                        f.classList.remove("hidden");
+                    });
+                    item.addEventListener("mouseout", function(event){
+                        let f = event.target.children[0];
+                        f.classList.add("hidden");
+                    });
+
+                    display_close.onclick = function(event) {
+                        display_item.classList.add('hidden');
+                    }
+
+                    display_edit.onclick = function(event) {
+                        panel_edit.classList.remove('hidden');
+                        title_edit.value = item.dataset.title;
+                        description_edit.value = item.dataset.description;
+                        category_edit.value = item.dataset.category;
+                    }
+
+                    edit_save.onclick = function(event) {
+                        event.preventDefault();
+
+                        let t = document.querySelector('#title_edit').value;
+                        let d = document.querySelector('#description_edit').value;
+                        let c = document.querySelector('#category_edit').value;
+                        
+                        item.dataset.title = t;
+                        item.dataset.description = d;
+                        item.dataset.category = c;
+                        
+                        console.log(item);
+
+                        item.innerHTML=`${t} <img src=\"imagesMacro5/images/delete_button.png\" class=\"delete_button hidden\">`;
+                        item.className = '';
+                        item.classList.add('item');
+                        item.classList.add(c);
+
+                        panel_edit.classList.add('hidden');
+                        display_item.classList.add('hidden');
+                    }
+
+                    edit_cancel.onclick = function(event) {
+                        event.preventDefault();
+                        panel_edit.classList.add('hidden');
+                        display_item.classList.add('hidden');
+                    }
+
+                    // set the item up so you can click on it
+                    item.addEventListener("click", function(event) {
+                        //if delete button is clicked, delete
+                        if(event.target.classList.contains('delete_button') == true){
+                            event.target.parentElement.remove();
+                        }
+                        else{
+                            console.log(event.currentTarget);
+                            let accessed = Date();
+                            display_item.classList.remove('hidden');
+                            display_title.innerHTML = `${event.currentTarget.dataset.title}`;
+                            display_category.innerHTML = `Season: ${event.currentTarget.dataset.category}`;
+                            display_description.innerHTML = `Description: ${event.currentTarget.dataset.description}`;
+                            display_created.innerHTML = `Created: ${event.currentTarget.dataset.created}`;
+                            display_accessed.innerHTML = `Last Accessed: ${accessed}`;
+                        }
+                    });
+
+                    // close the add panel
+                    panel_add_new_item.classList.add('hidden');
+
+                    //change back to show all seasons
+                    for(let i = 0; i < item_container.children.length; i++){
+                        item_container.children[i].classList.remove('hidden');
+                    }
+                }
+
+                // make sure we have all 3 -- if not, trigger the error message
+                else {
+                    add_error.classList.remove('hidden');
+                }
+
+            }
+            
+            //filter by season
+            season_filter.onchange = function(e){
+                let season = season_filter.value;
+                if(season == 'winter'){
+                    for(let i = 0; i < item_container.children.length; i++){
+                        if (item_container.children[i].classList.contains('winter')){
+                            item_container.children[i].classList.remove('hidden');
+                        }
+                        else{
+                            item_container.children[i].classList.add('hidden');
+                        }
+                    }
+                }
+                if(season == 'spring'){
+                    for(let i = 0; i < item_container.children.length; i++){
+                        if (item_container.children[i].classList.contains('spring')){
+                            item_container.children[i].classList.remove('hidden');
+                        }
+                        else{
+                            item_container.children[i].classList.add('hidden');
+                        }
+                    }
+                }
+                if(season == 'summer'){
+                    for(let i = 0; i < item_container.children.length; i++){
+                        if (item_container.children[i].classList.contains('summer')){
+                            item_container.children[i].classList.remove('hidden');
+                        }
+                        else{
+                            item_container.children[i].classList.add('hidden');
+                        }
+                    }
+                }
+                if(season == 'fall'){
+                    for(let i = 0; i < item_container.children.length; i++){
+                        if (item_container.children[i].classList.contains('fall')){
+                            item_container.children[i].classList.remove('hidden');
+                        }
+                        else{
+                            item_container.children[i].classList.add('hidden');
+                        }
+                    }
+                }
+                if(season == 'all'){
+                    for(let i = 0; i < item_container.children.length; i++){
+                        item_container.children[i].classList.remove('hidden');
+                    }
+                }
+            }
+
+        </script>
+    </body>
+</html>

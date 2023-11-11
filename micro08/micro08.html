@@ -1,0 +1,258 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Micro 08</title>
+    <style>
+      .box {
+        width: 25px;
+        height: 25px;
+        border: 1px solid black;
+        float: left;
+      }
+      .yellow {
+        background-color: yellow;
+      }
+      .green {
+        background-color: green;
+      }
+      .blue {
+        background-color: blue;
+      }
+      .orange {
+        background-color: orange;
+      }
+      .red {
+        background-color: red;
+      }
+      .pink {
+        background-color: pink;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Micro 08</h1>
+
+    Pick a box color:
+    <select id="colordropdown">
+      <option value="yellow">Yellow</option>
+      <option value="green">Green</option>
+      <option value="blue">Blue</option>
+      <option value="orange">Orange</option>
+      <option value="red">Red</option>
+      <option value="pink">Pink</option>
+    </select>
+    <button id="add">Add a new box</button>
+
+    <div id="boxes"></div>
+
+    <!-- our custom code -->
+    <script>
+
+      // DOM references to our HTML elements
+      let btn = document.getElementById('add');
+      let boxes = document.getElementById('boxes');
+      let color = document.getElementById('colordropdown');
+
+      // Task #1 -  when the page loads you should initiate
+      // a 'fetch' request to load the 'load_boxes.php' file --
+      // this file will query a database and will obtain the
+      // previously added colors.
+      //
+      // This file has been written for you, but you should read thorugh
+      // it as it represents a very common pattern for web development
+      // (using a small file to obtain specific data for a piece of an application)
+      // Note that the file uses a techique called JSON (JavaScript
+      // Object Notation) which will allow the PHP file to send over a fully
+      // populated Array that can be used right here in JavaScript!
+      //
+      // Once this information has been loaded you should create
+      // divs for each one of these boxes and add them to the page.
+      // This will have the effect of making the page "sticky" and
+      // all boxes will exist forever, as long as they are represented
+      // in the database.  The data itself is in a JSON format -- to
+      // turn it into a JavaScript array simply use the "json" function
+      // instead of the "text" function when your call to "fetch" returns
+      // a value.  For example:
+      //
+      //  if (result.ok) {
+      //      console.log("Success!");
+      //      return result.json();
+      //  }
+      //
+      // note that the end result will be an array of objects (console.log
+      // this out so you can see it)
+
+      function performFetch(args) {
+        // GET requests
+        if (args.method && args.method.toLowerCase() == 'get') {
+
+            // package up the data to send to the server
+            const params = new URLSearchParams();
+            for (const varName in args.data) {
+                params.append(varName, args.data[varName]);
+            }
+
+            // append variables to URL
+            args.url += '?' + params.toString();
+
+            // perform the fetch request
+            fetch(args.url)
+                .then(function(response) {
+                    if (response.ok) {
+                        return response.text();
+                    }
+                    else {
+                        let error = new Error("server error");
+                        throw error;
+                    }
+                })
+                
+                // call the provided success callback function
+                .then(function(text) {
+                    args.success(text);
+                })
+                
+                // call the provided error callback function
+                .catch(function(error) {
+                    args.error(error);
+                });
+
+        } // end GET request
+
+        // POST requests
+        else if (args.method && args.method.toLowerCase() == 'post') {
+
+            // package up the data to send to the server
+            // note that this is designed specifically to contact a PHP script
+            // we will use a slightly different approach when we contact
+            // node.js scripts in the next unit
+            const formData = new FormData();
+            for (const key in args.data) {
+                if (args.data.hasOwnProperty(key)) {
+                    formData.append(key, args.data[key]);
+                }
+            }
+
+            // perform the fetch request
+            fetch(args.url, {
+                method: "POST",
+                body: formData,
+            })
+            .then(function(response) {
+                if (response.ok) {
+                    return response.text();
+                }
+                else {
+                    let error = new Error("server error");
+                    throw error;
+                }
+            })
+            
+            // call the provided success callback function        
+            .then(function(text) {
+                args.success(text);
+            })
+            
+            // call the provided error callback function        
+            .catch(function(error) {
+                args.error(error);
+            });
+
+        } // end POST request
+
+      }
+
+      function getExistingEntries() {
+      // step 1: use the fetch API to grab the data.txt file from the server
+      performFetch({
+        method: 'GET',
+        url: 'get_boxes.php',
+        success: function(data, status) {
+          console.log("Success, got the data from the server");
+
+          // step 2: successfully retrieved file, now we need to parse
+          // it into a JavaScript array
+          let arrayData = JSON.parse(data);
+
+          // step 3: visit each element in the array and create
+          // new DOM elements for each one
+
+          for (let i = 0; i < arrayData.length; i++) {
+
+            // see if we already have a DOM element with this ID -
+            // if so, we don't want to do anything
+            if (!document.getElementById( arrayData[i]['id'] )) {
+
+              // create an entry div for this item
+              createEntry(arrayData[i]['id'], arrayData[i]['color']);
+
+            }
+          }
+
+          // in 2 seconds, do this all again to get any new entries that may have been added
+          //setTimeout(getExistingEntries, 2000);
+
+        },
+        error: function(req, data, status) {
+          console.log("Error, couldn't get file");
+        }
+      })
+      }
+
+      // call our function 1 time to start up the process of getting data from the server
+      getExistingEntries();
+
+      function createEntry(id, c) {
+        // create a new 'div' on the page with this ID
+        let tempDiv = document.createElement('div');
+        tempDiv.id = id;
+        tempDiv.classList.add('box');
+        tempDiv.classList.add(`${c}`);
+
+        boxes.appendChild(tempDiv);
+      }
+
+      // Task #2 - when the button is pressed initiate
+      // a 'fetch' request to 'savebox.php' - send it
+      // the current value of the drop down list and it
+      // will save a record for you in the 'boxes.db'
+      // database on the server.
+      //
+      // Ensure that you've set up the file path in
+      // 'config.php' to make this work.
+      //
+      // If the server returns a successful message then
+      // you should create a new div on the page with the
+      // class of 'box' and another class of whatever color
+      // the user selected and add it to the 'boxes' div.
+
+      
+      btn.onclick = function(event) {
+
+      // grab the info the server needs to save this entry
+      let newColor = color.value;
+
+      // make a fetch request to the server
+      performFetch({
+        method: 'POST',
+        url: 'savebox.php',
+        data: {
+          color: newColor
+        },
+        success: function(data, status) {
+          console.log("Success! Received this data from the server: ", data);
+          createEntry(data, newColor);
+        },
+        error: function(req, data, status) {
+          console.log("Error!");
+        }
+      })
+
+      }
+
+    </script>
+
+  </body>
+
+</html>

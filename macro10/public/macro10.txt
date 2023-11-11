@@ -1,0 +1,11 @@
+port 10063
+
+Build an express based Node.js system that includes the following features:
+
+-A landing route that welcomes users to your site
+-Four additional get routes (e.g. /about for an 'about this site' page, /contact for a 'contact me' page, etc.)
+-Use of an image on at least one route
+-At least one form that sends post data to another route on the site
+-Permanent file storage (both reading and writing) used somewhere on the site (e.g. asking the user to fill in 
+a form and then displaying that data somewhere else on the site)
+-Use of templates to create reusable presentation logic for every page on the site

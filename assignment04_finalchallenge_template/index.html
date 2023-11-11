@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <title>Design Your own Hogwarts!</title>
+    <style type="text/css">
+      #map{
+        width: 320px;
+        height: 320px;
+        float: left;
+        border: 1px solid black;
+      }
+      .map_block{
+        width: 32px;
+        height: 32px;
+        float: left;
+        box-sizing: border-box;
+      }
+      .map_block:hover{
+        border: 1px solid red;
+        box-sizing: border-box;
+
+      }
+      #right{
+        margin-left: 340px;
+      }
+      #block_inventory{
+        margin-top: 20px;
+      }
+      .selected{
+        border: 3px solid yellow;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Design Your Own Hogwarts!</h1>
+    <div id="left">
+      <div id="map">
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+        <div class="map_block"></div>
+      </div>
+    </div>
+    <div id="right">
+      <h3 id="instructions">Click on a tile to select it. Then click on the map on the left to place it.</h3>
+      <hr>
+      <div id="block_inventory"></div>
+    </div>
+
+
+    <!-- load in the image array file - this makes available a new array of all image filenames that you can use for this project -->
+    <!-- Assets courtesy of Crawl Stone Soup: https://github.com/crawl/tiles -->
+    <script src="image_array.js"></script>
+    <script>
+      const left = document.querySelector('#left');
+      const right = document.querySelector('#right');
+      const instructions = document.querySelector('#instructions');      
+      const map = document.querySelector('#map');
+      const block_inventory = document.querySelector('#block_inventory');
+      const map_block = document.querySelectorAll('.map_block');
+
+      let selected_block;
+
+      for (i = 0; i < array_library.length; i++){
+        let item = document.createElement('img');
+        item.src = array_library[i];
+        block_inventory.appendChild(item);
+      }
+
+      const img = document.querySelectorAll('img');
+       
+      //click on block
+      for (i = 0; i < img.length; i++){        
+        img[i].onclick = function(event){
+          if(selected_block != event.currentTarget){
+            for (i = 0; i < img.length; i++){
+              img[i].classList.remove('selected');
+            }
+            selected_block = event.currentTarget.src;
+            event.currentTarget.classList.add('selected');
+          }
+        }
+      }
+
+      //put block on map
+      for (i = 0; i < map_block.length; i++){
+        map_block[i].onclick = function(event){
+          event.currentTarget.style.backgroundImage = `url(${selected_block})`;
+        }
+      }
+    </script>
+  </body>
+</html>
